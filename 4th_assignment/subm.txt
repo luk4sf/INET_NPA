@@ -1,5 +1,11 @@
 Question 1)
 
+e) FIFO: With an increase in queue occupancy after second 5, which is where the simulations starts, the RTT increases linearly as well and does not drop again during the experiment even thoug the traffic simulation ends after 15 seconds. Since the queue just fills up and then starts dropping packets when its full there is no mechanism to prevent bufferbloat which results in incresed RTT. The RTT in the end is 7000 ms which is way more than all the other algorithms. 
+
+CoDel: f Because CoDel actively manages the queue by monitoring packet delay and dropping packets only when the minimum delay exceeds a target. The queue occupancy stays low and prevents long queuing delays, resulting in morestable and low RTT values. This is confirmed in the plot, after the RTT grows fast and exeeds the threshhold–probably around 1000ms–the the queue occupancy drops dramaticly since packets get dropped, this also relaxes the RTT, though only after a small delay. This delay leads to another small peak in occupancy which recovered way faster than RTT. Shortly after the simulation time at 15s the RTT is back at 0 again. In the entire period the RTT never exeeded 1400 ms.
+
+RED: RED probabilistically drops packets as the average queue size grows, signaling senders to slow down before the queue becomes full. This prevents excessive congestion but allows more variation in queue occupancy and RTT compared to CoDel. In the plot, the queue rises until the average queue sizes grows to around 25k bytes, then it starts to oscillate moderately, and RTT also shows small fluctuations, reflecting RED’s reliance on stochastic methods. The RTT grows initially as well but then stabelizes at the same time as the queue occupancy at around 1000 ms and also drops quite fast again as the queue starts getting smaller again. This algorithm seems like the best method for matching the RTT to the Queue Occupancy and also seems to work very good since to queue stays very full on average but the RTT never exeeds 1000 ms and returns to 0 very fast after the simulation.
+
 f) lukas@CrapBookPro:~$ tc qdisc show dev eno1
 qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
 lukas@CrapBookPro:~$ 
