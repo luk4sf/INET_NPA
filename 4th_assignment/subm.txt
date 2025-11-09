@@ -1,0 +1,8 @@
+Question 1)
+
+f) lukas@CrapBookPro:~$ tc qdisc show dev eno1
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+lukas@CrapBookPro:~$ 
+
+The interface eno1 is using the fq_codel (Fair Queuing Controlled Delay) qdisc which combines Fair Queuing with the CoDel AQM scheme.
+fq_codel groups packets into separate flows using stochastic models so that each flow receives a fair share of bandwidth, and CoDel controls latency by actively managing queue lengths. Within each flow, packets are kept in FIFO order to avoid reordering.
