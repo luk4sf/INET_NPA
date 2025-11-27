@@ -92,7 +92,7 @@ for ns in H1 H2 R1 R2 R3 R4 R5; do
 done
 
 # Optional tiny sleep to prevent race conditions
-sleep 2
+sleep 0.1
 
 # H1 default route via R1
 sudo ip netns exec H1 ip -6 route add default via 2001:DB8:1::2 dev veth-H1-R1
@@ -141,7 +141,7 @@ sudo ip netns exec R4 ip -6 route add fc00:3::1/128 via 2001:DB8:6::2 dev veth-R
 sudo ip netns exec R4 ip -6 route add fc00:5::1/128 via 2001:DB8:6::2 dev veth-R4-R5
 
 # --- On R5 ---
-sudo ip netns exec R5 ip -6 route add fc00:1::1/128 via 2001:DB8:6::1 dev veth-R5-R4
+sudo ip netns exec R5 ip -6 route add fc00:1::1/128 via 2001:DB8:5::1 dev veth-R5-R3
 sudo ip netns exec R5 ip -6 route add fc00:2::1/128 via 2001:DB8:5::1 dev veth-R5-R3
 sudo ip netns exec R5 ip -6 route add fc00:3::1/128 via 2001:DB8:5::1 dev veth-R5-R3
 sudo ip netns exec R5 ip -6 route add fc00:4::1/128 via 2001:DB8:6::1 dev veth-R5-R4
@@ -153,28 +153,11 @@ sudo ip netns exec R5 ip -6 route add fc00:4::1/128 via 2001:DB8:6::1 dev veth-R
 # Question 1 g) 
 # Enable SRv6 and IPv6 forwarding on each router
 
-#for r in R1 R2 R3 R4 R5; do
-#    sudo ip netns exec $r sysctl -w net.ipv6.conf.all.forwarding=1
-#    sudo ip netns exec $r sysctl -w net.ipv6.conf.all.seg6_enabled=1
-#done
-
-# Question 1 g) 
-# Enable SRv6 and IPv6 forwarding on each router
-
 for r in R1 R2 R3 R4 R5; do
-    # 1. Enable Forwarding
     sudo ip netns exec $r sysctl -w net.ipv6.conf.all.forwarding=1
-    
-    # 2. Enable SRv6 on 'all' and 'default' (good practice)
     sudo ip netns exec $r sysctl -w net.ipv6.conf.all.seg6_enabled=1
-    sudo ip netns exec $r sysctl -w net.ipv6.conf.default.seg6_enabled=1
-    
-    # 3. CRITICAL: Force enable SRv6 on ALL existing interfaces (lo, veth-*, etc.)
-    # Without this loop, the veth interfaces ignore the "all" setting above.
-    for dev in $(sudo ip netns exec $r ls /sys/class/net/); do
-        sudo ip netns exec $r sysctl -w net.ipv6.conf.$dev.seg6_enabled=1 2>/dev/null
-    done
 done
+
 # Question 1 h)
 # Define a routing rule for the router’s SID (End action) if packet dest. = router SID
 
@@ -197,24 +180,6 @@ sudo ip netns exec R5 ip -6 route add 2001:DB8:1::/64 encap seg6 mode encap segs
 
 # Question 1 j)
 
-# --- CRITICAL FIX: REMOVE LOCAL TABLE CONFLICTS ---
-echo "Fixing Local Table Conflicts..."
-# We must delete the 'local' table entry for the SIDs so the kernel 
-# uses the 'main' table entry (where the SRv6 behavior is defined).
-
-sudo ip netns exec R1 ip -6 route del fc00:1::1/128 table local
-sudo ip netns exec R2 ip -6 route del fc00:2::1/128 table local
-sudo ip netns exec R3 ip -6 route del fc00:3::1/128 table local
-sudo ip netns exec R4 ip -6 route del fc00:4::1/128 table local
-sudo ip netns exec R5 ip -6 route del fc00:5::1/128 table local
-
-# Also, ensure rp_filter is disabled to allow asymmetric routing
-for r in R1 R2 R3 R4 R5; do
-   # Disable RPF on all interfaces
-   for dev in $(sudo ip netns exec $r ls /sys/class/net/); do
-       sudo ip netns exec $r sysctl -w net.ipv4.conf.$dev.rp_filter=0 2>/dev/null
-   done
-done
 
 
 # Ping from H1 to H2 to test conectivity
