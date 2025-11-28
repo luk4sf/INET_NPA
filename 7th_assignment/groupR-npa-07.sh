@@ -1,4 +1,10 @@
 #!/bin/bash
+# Solution for Assignment 7
+
+# Group members:
+# Lukas Franz 0530099
+# Vincent Rinnert 0522118
+# Noah Stein 0527436
 
 # Optional script to clear all the namespaces to test properly - use by running ./exercise7.sh clear
 if [[ $1 == "clear" ]]; then
